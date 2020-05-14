@@ -22,7 +22,7 @@ export const ProductContainer = styled.View`
 `;
 
 export const ProductList = styled(FlatList as new () => FlatList<Product>)`
-  flex: 1;
+  /* flex: 1; */
   padding: 0 10px;
 `;
 
@@ -118,7 +118,7 @@ export const TotalProductsText = styled.Text`
 `;
 
 export const SubtotalValue = styled.Text`
-  font-size: 16px;
+  font-size: 20px;
   color: #fff;
   font-weight: bold;
 `;
