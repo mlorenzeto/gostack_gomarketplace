@@ -30,12 +30,11 @@ const CartProvider: React.FC = ({ children }) => {
 
   useEffect(() => {
     async function loadProducts(): Promise<void> {
-      // TODO LOAD ITEMS FROM ASYNC STORAGE
       const storagedProducts = await AsyncStorage.getItem(
         '@GoMarketplace:products',
       );
       if (storagedProducts) {
-        setProducts(JSON.parse(storagedProducts));
+        setProducts([...JSON.parse(storagedProducts)]);
       }
     }
 
@@ -55,21 +54,19 @@ const CartProvider: React.FC = ({ children }) => {
 
   const increment = useCallback(
     async (id: string) => {
-      // TODO INCREMENTS A PRODUCT QUANTITY IN THE CART
-      const productIndex = products.findIndex(item => item.id === id);
+      const newProducts = products.map(product =>
+        product.id === id
+          ? { ...product, quantity: product.quantity + 1 }
+          : product,
+      );
 
-      const newProducts = [...products];
-
-      newProducts[productIndex].quantity += 1;
-
-      setProducts([...newProducts]);
+      setProducts(newProducts);
     },
     [products],
   );
 
   const decrement = useCallback(
     async (id: string) => {
-      // TODO DECREMENTS A PRODUCT QUANTITY IN THE CART
       const productIndex = products.findIndex(item => item.id === id);
 
       if (productIndex < 0) {
@@ -84,33 +81,28 @@ const CartProvider: React.FC = ({ children }) => {
         newProducts.splice(productIndex, 1);
       }
 
-      setProducts([...newProducts]);
+      setProducts(newProducts);
     },
     [products],
   );
 
   const addToCart = useCallback(
-    async ({ id, title, price, image_url }: Omit<Product, 'quantity'>) => {
-      // TODO ADD A NEW ITEM TO THE CART
-      const product: Product = {
-        id,
-        title,
-        price,
-        image_url,
-        quantity: 0,
-      };
+    async (product: Omit<Product, 'quantity'>) => {
       const duplicatedProduct = products.find(item => item.id === product.id);
 
       if (duplicatedProduct) {
-        increment(duplicatedProduct.id);
-        return;
+        setProducts(
+          products.map(item =>
+            item.id === product.id
+              ? { ...product, quantity: item.quantity + 1 }
+              : item,
+          ),
+        );
+      } else {
+        setProducts([...products, { ...product, quantity: 1 }]);
       }
-
-      product.quantity = 1;
-
-      setProducts([...products, product]);
     },
-    [products, increment],
+    [products],
   );
 
   const value = React.useMemo(
