@@ -41,16 +41,16 @@ const CartProvider: React.FC = ({ children }) => {
     loadProducts();
   }, []);
 
-  useEffect(() => {
-    async function updateStoragedProducts(): Promise<void> {
-      await AsyncStorage.setItem(
-        '@GoMarketplace:products',
-        JSON.stringify(products),
-      );
-    }
+  // useEffect(() => {
+  //   async function updateStoragedProducts(): Promise<void> {
+  //     await AsyncStorage.setItem(
+  //       '@GoMarketplace:products',
+  //       JSON.stringify(products),
+  //     );
+  //   }
 
-    updateStoragedProducts();
-  }, [products]);
+  //   updateStoragedProducts();
+  // }, [products]);
 
   const increment = useCallback(
     async (id: string) => {
@@ -61,27 +61,31 @@ const CartProvider: React.FC = ({ children }) => {
       );
 
       setProducts(newProducts);
+
+      await AsyncStorage.setItem(
+        '@GoMarketplace:products',
+        JSON.stringify(newProducts),
+      );
     },
     [products],
   );
 
   const decrement = useCallback(
     async (id: string) => {
-      const productIndex = products.findIndex(item => item.id === id);
-
-      if (productIndex < 0) {
-        throw new Error('You can not incremment an unexistent item');
-      }
-
-      const newProducts = [...products];
-
-      newProducts[productIndex].quantity -= 1;
-
-      if (newProducts[productIndex].quantity < 1) {
-        newProducts.splice(productIndex, 1);
-      }
+      const newProducts = products
+        .map(product =>
+          product.id === id
+            ? { ...product, quantity: product.quantity - 1 }
+            : product,
+        )
+        .filter(product => product.quantity > 0);
 
       setProducts(newProducts);
+
+      await AsyncStorage.setItem(
+        '@GoMarketplace:products',
+        JSON.stringify(newProducts),
+      );
     },
     [products],
   );
@@ -90,17 +94,24 @@ const CartProvider: React.FC = ({ children }) => {
     async (product: Omit<Product, 'quantity'>) => {
       const duplicatedProduct = products.find(item => item.id === product.id);
 
+      let newProducts: Product[] = [];
+
       if (duplicatedProduct) {
-        setProducts(
-          products.map(item =>
-            item.id === product.id
-              ? { ...product, quantity: item.quantity + 1 }
-              : item,
-          ),
+        newProducts = products.map(item =>
+          item.id === product.id
+            ? { ...product, quantity: item.quantity + 1 }
+            : item,
         );
+        setProducts(newProducts);
       } else {
-        setProducts([...products, { ...product, quantity: 1 }]);
+        newProducts = [...products, { ...product, quantity: 1 }];
+        setProducts(newProducts);
       }
+
+      await AsyncStorage.setItem(
+        '@GoMarketplace:products',
+        JSON.stringify(newProducts),
+      );
     },
     [products],
   );
